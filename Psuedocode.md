@@ -144,6 +144,9 @@ is_dup()
 ```
 # Questions
 Why don't PCR duplicates have the same sequence? -> B/c if they did, wouldn't be "uniquely mapped reads?"
+
 Am I correct about how samtools sort works? 
+
 	I'll take for granted that before the main algorithm, I will call samtools sort without any flags to sort by the mapping position, and though the POS column of the sam file starts at one at the start of each chromosome, it'll sort by the chromosome first, and the POS column second. 
-If above is correct, is it even necessary to check the chromosome?
+
+If above is correct, is it even necessary to check the chromosome? (I'm thinking no, but will add argument to is_dup if so.
