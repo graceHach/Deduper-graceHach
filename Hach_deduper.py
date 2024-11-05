@@ -9,6 +9,10 @@ umis = utils.get_umis(args.umi)
 # Keep list of chromosomes in order
 chrs = []
 curr_chrom = None
+header_lines = 0
+uniq_reads = 0
+wrong_umis = 0
+duplicates_removed = 0
 # Initialize an empty set called seqs
 # This set will store tuples for each unique read, and be cleared when curr_chrom is updated
 # tuples are of the form (flag (bool), umi (str), 5' start position (int))
@@ -22,6 +26,7 @@ while f_in:
     if in_line=="":
         break
     elif in_line[0]=="@":
+        header_lines += 1
         # Write each line to the output file
         f_out.write(in_line)
         if in_line[:7]=="@SQ	SN:":
@@ -31,7 +36,6 @@ while f_in:
             curr_chrom = chrs[0]
     else:
         # header lines are done
-
         # Parse line
         #return umi, flag, chrom, pos, cigar
         umi, flag, chrom, pos, cigar = utils.parse_line(in_line)
@@ -44,15 +48,22 @@ while f_in:
             curr_chrom = chrom
         if curr_tuple in seqs:
             # duplicate, don't write, don't alter seqs
+            duplicates_removed += 1
             continue
         else:
             # unqiue
             if umi in umis:
-                #print(in_line[:30])
-                #print(curr_tuple)
+                uniq_reads += 1
                 f_out.write(in_line)
                 seqs.add(curr_tuple)
+            else:
+                wrong_umis += 1
             
 # Close files
 f_in.close()
 f_out.close()
+
+print("Header Lines:", header_lines)
+print("Unique Reads:", uniq_reads)
+print("Duplicates Removed", duplicates_removed)
+print("Wrong UMIs:", wrong_umis)

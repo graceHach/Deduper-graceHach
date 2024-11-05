@@ -95,7 +95,8 @@ def parse_line(sam_line):
 
     '''
     split = sam_line.split("\t")
-    umi = split[0].split(":")[1]
+    q_name_split = split[0].split(":")
+    umi = q_name_split[-1]
     flag = split[1]
     chrom = split[2]
     pos = split[3]
