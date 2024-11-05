@@ -40,14 +40,3 @@ class TestStringMethods(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
-
-    """
-    def test_get_actual_pos(self):
-        output.utils.
-        self.assertEqual()
-    """
-
-    
