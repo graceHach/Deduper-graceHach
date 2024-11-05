@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse 
 import re
 
@@ -14,7 +16,7 @@ def parse_args():
     parser.add_argument("-f", "--file", type=str, help="designates absolute file path to sorted sam file")
     parser.add_argument("-o", "--outfile", type=str, help="designates absolute file path to deduplicated sam file")
     parser.add_argument("-u", "--umi", type=str, help="designates file containing the list of UMIs")
-    parser.add_argument("-h", "--help", type=str, help="prints a USEFUL help message")
+    #parser.add_argument("-h", "--help", type=str, help="prints a USEFUL help message")
     args = parser.parse_args()
     return args
 
@@ -28,7 +30,7 @@ def get_umis(umi_filename):
     Output:
         umi_set (set of str) - set containing the umis from the file
     '''
-    umi_set = {}
+    umi_set = set()
     with open(umi_filename, 'r') as fh:
         for line in fh:
             umi_set.add(line.strip())
@@ -47,39 +49,44 @@ def get_actual_pos(pos, cigar, flag):
         actual_pos (int) - Actual 5' starting position
     '''
     # sequence being reverse complimented == it's the minus strand
-    if (flag&16)==16: 
+    if (int(flag)&16)==16: 
         # Parse string to get number of trailing soft clipped bases 
         # Trim leading S, we don't care about it
-        # add try except to handle lack of leading s
-        cigar = cigar[cigar.index("S")+1:]
-        re.findall("[0-9]+S", cigar)
+        split = re.split("^[0-9]+S", cigar, 1)
+        if split[0] == "":
+            # Case where there was a leading S
+            cigar = split[1]
+        else:
+            # Case where there wasn't
+            cigar=split[0]
         # Get number of Ns, Ds, trailing Ss, and Ms,
-        # determine if 
-        actual_pos = pos + M + N + D + trailing Ss
+        split = re.split("[MNDS]", cigar)
+        # splits on chars of interest, last char will be a ""
+        split = split[:-1]
+        return int(pos) + sum([int(x) for x in split])
+        #actual_pos = pos + M + N + D + trailing Ss
     else:
         # Get # of bases soft clipped at leading end 
-        leading_s = int(cigar[:cigar.index("S")])
-        actual_pos = pos - leading_s
-    return actual_pos
-
-'''
-def write_line(line, file_handle):
-'''
-Writes a new line to a sam file
-Input:
-	line (str) - the line as read from the file
-	file_handle - file handle (already opened) of output file
-'''
-	return
+        # returns [] if no leading s
+        leading_s = re.findall("^[0-9]+S", cigar)
+        #print(leading_s)
+        if len(leading_s)==0:
+            return int(pos)
+        else:
+            #print(leading_s[:-1])
+            return int(pos) - int(leading_s[0][:-1])
 
 def parse_line(sam_line):
-'''
-Input:
+    '''
+    Input:
 
-Output:
+    Output:
 
-'''
-	return flag, pos, umi, chrom
-
-'''
-
+    '''
+    split = sam_line.split("\t")
+    umi = split[0].split(":")[1]
+    flag = split[1]
+    chrom = split[2]
+    pos = split[3]
+    cigar = split[5]
+    return umi, flag, chrom, pos, cigar
